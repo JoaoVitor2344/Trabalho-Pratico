@@ -1,64 +1,78 @@
-# Função que retorna os vizinhos de uma posição
-def vizinhos(labirinto, posicao) :
-    linhas = len(labirinto)
-    colunas = len(labirinto[0])
-    vizinhos = []
+def busca_em_profunidade(grafo, inicio, fim):
+    pilha = []
+    visitados = set()
+    pilha.append(inicio)
+    while pilha:
+        vertice = pilha.pop()
+        if vertice == fim:
+            return True
+        if vertice not in visitados:
+            visitados.add(vertice)
+            pilha.extend(grafo[vertice] - visitados)
+    return False
 
-    if posicao[0] > 0 and labirinto[posicao[0] - 1][posicao[1]] != 1 :
-        vizinhos.append((posicao[0] - 1, posicao[1]))
-    if posicao[0] < linhas - 1 and labirinto[posicao[0] + 1][posicao[1]] != 1 :
-        vizinhos.append((posicao[0] + 1, posicao[1]))
-    if posicao[1] > 0 and labirinto[posicao[0]][posicao[1] - 1] != 1 :
-        vizinhos.append((posicao[0], posicao[1] - 1))
-    if posicao[1] < colunas - 1 and labirinto[posicao[0]][posicao[1] + 1] != 1 :
-        vizinhos.append((posicao[0], posicao[1] + 1))
-    
-    return vizinhos
+# Path: 2.py
+def busca_em_largura(grafo, inicio, fim):
+    fila = []
+    visitados = set()
+    fila.append(inicio)
+    while fila:
+        vertice = fila.pop(0)
+        if vertice == fim:
+            return True
+        if vertice not in visitados:
+            visitados.add(vertice)
+            fila.extend(grafo[vertice] - visitados)
+    return False
 
-# Função que retorna o caminho mais curto entre dois pontos
-def caminho_mais_curto(labirinto, partida, chegada) :
-    linhas = len(labirinto)
-    colunas = len(labirinto[0])
+def busca_com_djikstra(grafo, inicio, fim):
+    fila = []
+    visitados = set()
+    fila.append(inicio)
+    while fila:
+        vertice = fila.pop(0)
+        if vertice == fim:
+            return True
+        if vertice not in visitados:
+            visitados.add(vertice)
+            fila.extend(grafo[vertice] - visitados)
+    return False
 
-    # Função recursiva que explora os caminhos
-    def explora_caminho(labirinto, posicao, chegada, caminho) :
-        if posicao == chegada :
-            return caminho + [posicao]
-        else :
-            caminho.append(posicao)
-
-            for vizinho in vizinhos(labirinto, posicao) :
-                if vizinho not in caminho :
-                    caminho_encontrado = explora_caminho(labirinto, vizinho, chegada, caminho)
-                    if caminho_encontrado != None :
-                        return caminho_encontrado
-            caminho.pop()
-            return "Não há caminho possível"
-        
-    return explora_caminho(labirinto, partida, chegada, [])
+# Função que calcula a diferença de velocidade entre a busca em profundidade e a busca em largura
+def diferenca_velocidade():
+    import timeit
+    setup = '''
+from __main__ import busca_em_profunidade, busca_em_largura, grafo
+    '''
+    print(timeit.timeit('busca_em_profunidade(grafo, (1, 1), (8, 8))', setup=setup, number=10000))
+    print(timeit.timeit('busca_em_largura(grafo, (1, 1), (8, 8))', setup=setup, number=10000))
 
 if __name__ == '__main__':
-    # Labirinto 0 = caminho livre 1 = parede
     labirinto = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 0 ,1, 1, 1, 1, 1, 0],
-        [0, 0, 0 ,1, 0, 0, 0, 0, 0],
-        [0, 1, 0 ,1, 0, 1, 1, 1, 1],
-        [0, 1, 0 ,1, 0, 0, 0, 0, 0],
-        [0, 1, 0 ,1, 0, 1, 1, 1, 0],
-        [0, 1, 0 ,1, 0, 0, 0, 1, 0],
-        [0, 1, 0 ,1, 1, 1, 0, 1, 0],
-        [0, 1, 0 ,0, 0, 0, 0, 1, 0],
-        [0, 1, 1 ,1, 1, 1, 1, 1, 0],
-        [0, 0, 0 ,0, 0, 0, 0, 0, 0]
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], # 0
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1], # 1
+        [1, 0, 1, 1, 1, 1, 1, 1, 0, 1], # 2
+        [1, 0, 1, 0, 0, 0, 0, 0, 0, 1], # 3
+        [1, 0, 1, 0, 1, 1, 1, 1, 0, 1], # 4
+        [1, 0, 1, 0, 1, 0, 0, 0, 0, 1], # 5
+        [1, 0, 1, 0, 1, 0, 1, 1, 0, 1], # 6
+        [1, 0, 1, 0, 1, 0, 1, 0, 0, 1], # 7
+        [1, 0, 0, 0, 1, 0, 1, 0, 0, 1], # 8
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  # 9
     ]
 
-    # Exemplo de partida e chegada
-    partida = (0, 0)
-    chegada = (10, 8)
+    grafo = {}
+    for i in range(len(labirinto)):
+        for j in range(len(labirinto[i])):
+            if labirinto[i][j] == 0:
+                grafo[(i, j)] = set()
+                if i > 0 and labirinto[i - 1][j] == 0:
+                    grafo[(i, j)].add((i - 1, j))
+                if i < len(labirinto) - 1 and labirinto[i + 1][j] == 0:
+                    grafo[(i, j)].add((i + 1, j))
+                if j > 0 and labirinto[i][j - 1] == 0:
+                    grafo[(i, j)].add((i, j - 1))
+                if j < len(labirinto[i]) - 1 and labirinto[i][j + 1] == 0:
+                    grafo[(i, j)].add((i, j + 1))
 
-    # Chamada da função
-    caminho = caminho_mais_curto(labirinto, partida, chegada)
-
-    # Imprime o caminho
-    print(caminho)
+    diferenca_velocidade()
